@@ -20,32 +20,37 @@
             const symbol = document.getElementById('tokenSymbol').value;
             const supply = parseInt(document.getElementById('tokenSupply').value);
 
-            // Connect to the wallet
-            const provider = window.solana;
-            if (provider.isPhantom) {
-                await provider.connect();
-                const publicKey = provider.publicKey.toString();
-                
-                // Create a connection to the Solana cluster
-                const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('devnet'), 'confirmed');
+            // Check if Phantom is installed
+            if (window.solana && window.solana.isPhantom) {
+                try {
+                    // Connect to the wallet
+                    const provider = await window.solana.connect();
+                    const publicKey = provider.publicKey.toString();
 
-                // Create the token
-                const mint = await splToken.Token.createMint(
-                    connection,
-                    provider.publicKey,
-                    publicKey,
-                    null,
-                    9, // Decimals
-                    splToken.TOKEN_PROGRAM_ID,
-                );
+                    // Create a connection to the Solana cluster
+                    const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('devnet'), 'confirmed');
 
-                // Create an account to hold the tokens
-                const tokenAccount = await mint.getOrCreateAssociatedAccountInfo(publicKey);
+                    // Create the token
+                    const mint = await splToken.Token.createMint(
+                        connection,
+                        provider.publicKey,
+                        publicKey,
+                        null,
+                        9, // Decimals
+                        splToken.TOKEN_PROGRAM_ID,
+                    );
 
-                // Mint tokens to the created account
-                await mint.mintTo(tokenAccount.address, publicKey, [], supply);
+                    // Create an account to hold the tokens
+                    const tokenAccount = await mint.getOrCreateAssociatedAccountInfo(provider.publicKey);
 
-                alert(`Token ${name} (${symbol}) created successfully with supply: ${supply}`);
+                    // Mint tokens to the created account
+                    await mint.mintTo(tokenAccount.address, publicKey, [], supply);
+
+                    alert(`Token ${name} (${symbol}) created successfully with supply: ${supply}`);
+                } catch (error) {
+                    console.error('Error creating token:', error);
+                    alert('Failed to create token. Please check console for details.');
+                }
             } else {
                 alert('Please install the Phantom wallet.');
             }
