@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Solana Token</title>
+    <script src="https://unpkg.com/@solana/web3.js@latest"></script>
+    <script src="https://unpkg.com/@solana/spl-token@latest"></script>
+</head>
+<body>
+    <h1>Create Your Token on Solana</h1>
+    <input type="text" id="tokenName" placeholder="Token Name" required>
+    <input type="text" id="tokenSymbol" placeholder="Token Symbol" required>
+    <input type="number" id="tokenSupply" placeholder="Total Supply" required>
+    <button id="createToken">Create Token</button>
+
+    <script>
+        const createToken = async () => {
+            const name = document.getElementById('tokenName').value;
+            const symbol = document.getElementById('tokenSymbol').value;
+            const supply = parseInt(document.getElementById('tokenSupply').value);
+
+            // Connect to the wallet
+            const provider = window.solana;
+            if (provider.isPhantom) {
+                await provider.connect();
+                const publicKey = provider.publicKey.toString();
+                
+                // Create a connection to the Solana cluster
+                const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('devnet'), 'confirmed');
+
+                // Create the token
+                const mint = await splToken.Token.createMint(
+                    connection,
+                    provider.publicKey,
+                    publicKey,
+                    null,
+                    9, // Decimals
+                    splToken.TOKEN_PROGRAM_ID,
+                );
+
+                // Create an account to hold the tokens
+                const tokenAccount = await mint.getOrCreateAssociatedAccountInfo(publicKey);
+
+                // Mint tokens to the created account
+                await mint.mintTo(tokenAccount.address, publicKey, [], supply);
+
+                alert(`Token ${name} (${symbol}) created successfully with supply: ${supply}`);
+            } else {
+                alert('Please install the Phantom wallet.');
+            }
+        };
+
+        document.getElementById('createToken').onclick = createToken;
+    </script>
+</body>
+</html>
